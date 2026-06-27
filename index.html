@@ -429,6 +429,7 @@ const progress={};TOPICS.forEach(t=>progress[t.id]={correct:0,attempts:0});
 let studentName='',tutorEndpoint='https://script.google.com/macros/s/AKfycbwVBTiwms1fhJipEAI8R9fMKuU83xYw6s-UZqwWRWjZpebDSWO4X4G10OPO3Huzu9EljA/exec';
 let current=null,tab='lesson',problem=null,answered=false,selected=null,streak=0;
 let sessionCorrect=0,sessionAttempts=0;
+let sessionSynced=false;
 
 function saveState(){try{localStorage.setItem(STORE,JSON.stringify({name:studentName,endpoint:tutorEndpoint,progress,ts:Date.now()}))}catch(e){}}
 function loadState(){try{const d=JSON.parse(localStorage.getItem(STORE)||'null');if(!d)return;
@@ -554,6 +555,7 @@ function renderTopic(){
     if(tab==='check'){
       sessionCorrect=0;
       sessionAttempts=0;
+      sessionSynced=false;
       problem=GEN[t.gen]();
     }
     renderTopic();
@@ -575,6 +577,7 @@ function renderLesson(t){
     selected=null;
     sessionCorrect=0;
     sessionAttempts=0;
+    sessionSynced=false;
     problem=GEN[t.gen]();
     renderTopic();
   };
@@ -584,45 +587,85 @@ function renderLesson(t){
 function renderCheck(t){
   const p=progress[t.id];
   const isDone = (sessionAttempts === 10);
-  const qText = isDone ? `Результат: ${sessionCorrect} из 10` : `Задание ${sessionAttempts + 1} из 10`;
+  
+  let qText = '';
+  if (isDone) {
+    qText = `Результат: ${sessionCorrect} из 10`;
+  } else {
+    qText = `Задание ${sessionAttempts + (answered ? 0 : 1)} из 10`;
+  }
+
+  let feedbackHTML = '';
+  if (isDone) {
+    const accuracy = Math.round(100 * sessionCorrect / 10);
+    feedbackHTML = `
+      <div class="feedback ok show" style="display:block;">
+        <div class="head">Проверка завершена!</div>
+        <div class="why">Ваш результат: ${sessionCorrect} из 10 (${accuracy}%).<br>
+        <span style="font-weight:bold;color:${sessionSynced?'#2E7D5B':'#B4503E'}">
+          ${sessionSynced ? '✓ Результаты успешно записаны в журнал репетитора.' : '⚠ Не удалось отправить в журнал (сохранено локально).'}
+        </span>
+        </div>
+      </div>`;
+  }
+
   document.getElementById('tabBody').innerHTML=`
     <div class="card">
       <div class="card-head"><span class="q-counter">${qText}</span><span class="streak">серия <b>${streak}</b>🔥</span></div>
-      <div class="prompt">${problem.promptHTML}</div>
-      ${problem.visualHTML?`<div class="visual">${problem.visualHTML}</div>`:''}
-      <div id="inputArea"></div>
-      <div class="feedback" id="fb"></div>
+      
+      ${isDone ? '' : `
+        <div class="prompt">${problem.promptHTML}</div>
+        ${problem.visualHTML?`<div class="visual">${problem.visualHTML}</div>`:''}
+        <div id="inputArea"></div>
+      `}
+      
+      <div class="feedback ${isDone ? '' : 'show'}" id="fb">${feedbackHTML}</div>
+      
       <div class="actions">
-        <button class="btn btn-primary" id="checkBtn" style="display:${isDone ? 'none' : 'inline-block'}">Проверить</button>
-        <button class="btn btn-ghost" id="hintBtn" style="display:${isDone ? 'none' : 'inline-block'}">Подсказка</button>
-        <button class="btn btn-ghost" id="nextBtn" style="display:${isDone ? 'inline-block' : 'none'}">${isDone ? 'Начать заново ↻' : 'Следующее →'}</button>
-        <button class="btn btn-ghost btn-sm" id="saveBtn" style="margin-left:auto; display:${isDone ? 'inline-block' : 'none'}">Сохранить результат в журнал</button>
+        ${isDone ? `
+          <button class="btn btn-primary" id="resetBtn">Начать заново ↻</button>
+          <button class="btn btn-ghost btn-sm" id="saveBtn" style="margin-left:auto;">Отправить в журнал ещё раз</button>
+        ` : `
+          <button class="btn btn-primary" id="actionBtn">${answered ? 'Следующее →' : 'Проверить'}</button>
+          <button class="btn btn-ghost" id="hintBtn" style="display:${answered ? 'none' : 'inline-block'}">Подсказка</button>
+        `}
       </div>
-      <div class="hintline" id="hintLine" style="display:none">💡 ${problem.hint||''}</div>
+      
+      ${isDone ? '' : `<div class="hintline" id="hintLine" style="display:none">💡 ${problem.hint||''}</div>`}
     </div>`;
-  buildInput(problem.input);
-  document.getElementById('checkBtn').onclick=doCheck;
-  document.getElementById('nextBtn').onclick=()=>{
-    if(sessionAttempts === 10) {
+
+  if (!isDone) {
+    buildInput(problem.input);
+    const btn = document.getElementById('actionBtn');
+    if (answered) {
+      btn.onclick = () => {
+        answered = false;
+        selected = null;
+        problem = GEN[t.gen]();
+        renderCheck(t);
+      };
+      btn.focus();
+    } else {
+      btn.onclick = doCheck;
+    }
+    document.getElementById('hintBtn').onclick = () => document.getElementById('hintLine').style.display = 'block';
+  } else {
+    document.getElementById('resetBtn').onclick = () => {
       sessionCorrect = 0;
       sessionAttempts = 0;
+      sessionSynced = false;
       answered = false;
       selected = null;
       problem = GEN[t.gen]();
       renderCheck(t);
-    } else {
-      answered=false;
-      selected=null;
-      problem=GEN[t.gen]();
+    };
+    document.getElementById('saveBtn').onclick = () => {
+      const synced = syncSession(t.id);
+      sessionSynced = synced;
+      toast(synced ? 'Результат отправлен в журнал' : 'Не удалось отправить');
       renderCheck(t);
-    }
-  };
-  document.getElementById('hintBtn').onclick=()=>document.getElementById('hintLine').style.display='block';
-  document.getElementById('saveBtn').onclick=()=>{
-    saveState();
-    const synced=syncSession(t.id);
-    toast(synced?'Результат отправлен в журнал':'Сохранено локально (журнал не подключён)');
-  };
+    };
+  }
 }
 function buildInput(inp){
   const area=document.getElementById('inputArea');
@@ -646,30 +689,39 @@ function doCheck(){
   else{streak=0;fb.className='feedback err show';fb.innerHTML=`<div class="head">Не совсем</div><div class="why">Правильный ответ: ${res.correctText}.<br>${problem.wrongWhy?problem.wrongWhy(ans):''}</div>`;}
   if(inp.type==='choice')document.querySelectorAll('#choices .choice').forEach(b=>{b.disabled=true;const cv=problem.input.options.find(o=>problem.check(o).ok);if(b.dataset.v===cv)b.classList.add('correct');else if(b.dataset.v===selected)b.classList.add('wrong');});
   ['inN','inD','inW','inS'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=true;});
-  document.getElementById('checkBtn').style.display='none';
   
-  if (sessionAttempts < 10) {
-    const nb=document.getElementById('nextBtn');
-    nb.textContent = 'Следующее →';
-    nb.style.display='inline-block';
-    nb.focus();
-    document.querySelector('.q-counter').textContent=`Задание ${sessionAttempts} из 10`;
-  } else {
+  document.querySelector('.streak').innerHTML=`серия <b>${streak}</b>🔥`;
+  
+  if (sessionAttempts === 10) {
     const p=progress[current];
     p.correct = sessionCorrect;
     p.attempts = 10;
     saveState();
     renderNav();
-    fb.innerHTML += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(15,46,51,0.1);font-weight:600;">Проверка завершена! Ваш результат: ${sessionCorrect} из 10 (${Math.round(100*sessionCorrect/10)}%).</div>`;
-    const nb=document.getElementById('nextBtn');
-    nb.textContent = 'Начать заново ↻';
-    nb.style.display='inline-block';
-    nb.focus();
-    const sb=document.getElementById('saveBtn');
-    if (sb) sb.style.display='inline-block';
-    document.querySelector('.q-counter').textContent=`Результат: ${sessionCorrect} из 10`;
+    
+    // Automatically submit to Google Sheets
+    sessionSynced = syncSession(current);
+    
+    const btn = document.getElementById('actionBtn');
+    btn.textContent = 'Посмотреть результаты';
+    btn.onclick = () => {
+      renderCheck(TOPICS.find(x=>x.id===current));
+    };
+    btn.focus();
+  } else {
+    const btn = document.getElementById('actionBtn');
+    btn.textContent = 'Следующее →';
+    btn.onclick = () => {
+      answered = false;
+      selected = null;
+      problem = GEN[TOPICS.find(x=>x.id===current).gen]();
+      renderCheck(TOPICS.find(x=>x.id===current));
+    };
+    btn.focus();
   }
-  document.querySelector('.streak').innerHTML=`серия <b>${streak}</b>🔥`;
+  
+  const hintBtn = document.getElementById('hintBtn');
+  if (hintBtn) hintBtn.style.display = 'none';
 }
 
 /* --------- генерация набора заданий --------- */
