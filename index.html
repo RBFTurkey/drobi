@@ -426,7 +426,7 @@ const TOPICS=[
 /* ===================== СОСТОЯНИЕ + ХРАНИЛИЩЕ ===================== */
 const STORE='rbf_drobi_v1';
 const progress={};TOPICS.forEach(t=>progress[t.id]={correct:0,attempts:0});
-let studentName='',tutorEndpoint='';
+let studentName='',tutorEndpoint='https://script.google.com/macros/s/AKfycbwVBTiwms1fhJipEAI8R9fMKuU83xYw6s-UZqwWRWjZpebDSWO4X4G10OPO3Huzu9EljA/exec';
 let current=null,tab='lesson',problem=null,answered=false,selected=null,streak=0;
 
 function saveState(){try{localStorage.setItem(STORE,JSON.stringify({name:studentName,endpoint:tutorEndpoint,progress,ts:Date.now()}))}catch(e){}}
