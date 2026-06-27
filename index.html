@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBF Tutor · Дроби</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F2E33;--teal:#1C5B59;--teal-soft:#2E7D7A;--brass:#B38A4C;--brass-bright:#CDA45C;
+  --parchment:#F4EFE4;--parchment-2:#EDE6D6;--card:#FCFAF4;--ok:#2E7D5B;--ok-bg:#E5F0E8;
+  --err:#B4503E;--err-bg:#F6E7E2;--line:rgba(15,46,51,.14);--line-strong:rgba(15,46,51,.28);
+  --shadow:0 1px 2px rgba(15,46,51,.06),0 8px 28px rgba(15,46,51,.08);
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(1200px 600px at 80% -10%,rgba(28,91,89,.10),transparent 60%),var(--parchment);
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}.serif{font-family:'Cormorant Garamond',serif}
+.shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+@media(max-width:900px){.shell{grid-template-columns:1fr}}
+.side{background:linear-gradient(180deg,var(--ink),#0B2327);color:#EAF0EE;padding:24px 20px 30px;
+  position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto}
+@media(max-width:900px){.side{position:static;height:auto}}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand .mark{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:30px;color:var(--brass-bright);line-height:1}
+.brand .sub{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#9FB6B3}
+.side .tag{font-family:'Cormorant Garamond',serif;font-size:24px;margin:12px 0 4px;font-weight:700}
+.side .tag em{color:var(--brass-bright);font-style:normal}
+.side .who{font-size:12px;color:#9FB6B3;margin-bottom:16px}
+.nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.nav button{width:100%;text-align:left;background:transparent;border:0;color:#D6E2E0;padding:9px 11px;
+  border-radius:9px;cursor:pointer;font-family:inherit;font-size:13.5px;display:flex;align-items:center;gap:10px;transition:.15s}
+.nav button:hover{background:rgba(255,255,255,.05)}
+.nav button.active{background:rgba(205,164,92,.14);color:#fff}
+.nav button.active .idx{background:var(--brass);color:#1a1407;border-color:var(--brass)}
+.nav .idx{flex:0 0 25px;height:25px;border-radius:7px;display:grid;place-items:center;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,.18);color:#A9C0BD}
+.nav .lbl{flex:1;min-width:0}.nav .done{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--brass-bright)}
+.nav .sec{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#7E9794;margin:16px 0 6px 6px}
+.side-foot{margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8FA8A5}
+.sync-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.sync-on{background:#6FCF97}.sync-off{background:#7E9794}
+
+.main{padding:32px clamp(18px,4vw,56px) 90px;max-width:940px}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--brass);display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--brass)}
+h1.topic{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:clamp(32px,5vw,48px);line-height:1.03;margin:0 0 12px}
+.blurb{font-size:16px;color:#3a4d4f;max-width:64ch;margin:0 0 8px}
+.tabs{display:flex;gap:6px;margin:22px 0 24px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{background:transparent;border:0;border-bottom:2.5px solid transparent;padding:11px 16px;cursor:pointer;
+  font-family:inherit;font-size:14.5px;color:#5a6e70;font-weight:600;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}.tab.active{color:var(--teal);border-color:var(--brass)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:clamp(20px,3vw,32px)}
+.lesson h2{font-family:'Cormorant Garamond',serif;font-size:27px;color:var(--teal);margin:22px 0 10px;font-weight:700}
+.lesson p{font-size:16px;color:#26383a;margin:0 0 14px;max-width:64ch}
+.lesson .lead{font-weight:700;color:var(--ink)}
+figure{margin:18px 0;text-align:center}figure figcaption{font-size:13.5px;color:#5a6e70;margin-top:8px}
+.callout{border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;font-size:14.5px;max-width:64ch}
+.callout b{color:var(--ink)}
+.c-teal{background:rgba(28,91,89,.08);border-left:4px solid var(--teal-soft);color:#234b48}
+.c-brass{background:var(--parchment-2);border-left:4px solid var(--brass);color:#3a4d4f}
+.c-err{background:var(--err-bg);border-left:4px solid var(--err);color:#7e3326}
+.bigfrac{display:inline-flex;flex-direction:column;align-items:center;font-family:'IBM Plex Mono',monospace;
+  font-weight:700;font-size:30px;line-height:1.05;margin:6px 10px}
+.bigfrac .bar{height:3px;background:var(--ink);width:100%;margin:3px 0}
+
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-family:'IBM Plex Mono',monospace;line-height:1.05;margin:0 3px}
+.fr .n,.fr .d{padding:0 5px;font-weight:600}.fr .bar{height:2px;background:var(--ink);width:100%;min-width:20px;margin:2px 0}
+.fr.lg{font-size:24px}.op{font-family:'IBM Plex Mono',monospace;font-weight:600;margin:0 7px;vertical-align:middle}
+.mixed{display:inline-flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-weight:600;vertical-align:middle}
+.mixed .whole{font-size:24px;margin-right:5px}
+svg{display:block;max-width:100%;height:auto}
+
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:4px;flex-wrap:wrap}
+.q-counter{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5a6e70}
+.streak{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--brass)}.streak b{color:var(--ink)}
+.prompt{font-size:19px;margin:16px 0 4px}.visual{margin:20px 0 8px;display:flex;justify-content:center}
+.answer-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:24px 0 6px}
+.fr-input{display:inline-flex;flex-direction:column;align-items:center}
+.fr-input input,.whole-input input{width:74px;height:48px;text-align:center;font-family:'IBM Plex Mono',monospace;
+  font-size:22px;font-weight:600;border:1.5px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink)}
+.fr-input .bar{height:2px;width:74px;background:var(--ink);margin:5px 0}
+.fr-input input:focus,.whole-input input:focus{outline:none;border-color:var(--teal-soft);box-shadow:0 0 0 3px rgba(46,125,122,.18)}
+.field-label{font-size:11px;color:#7a8c8e;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+.choices{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 4px}
+.choice{background:#fff;border:1.5px solid var(--line-strong);border-radius:12px;padding:13px 18px;cursor:pointer;
+  font-family:inherit;font-size:16px;color:var(--ink);transition:.13s;min-width:60px;display:flex;align-items:center;justify-content:center}
+.choice:hover{border-color:var(--teal-soft)}.choice.sel{border-color:var(--teal);background:rgba(28,91,89,.07)}
+.choice.correct{border-color:var(--ok);background:var(--ok-bg)}.choice.wrong{border-color:var(--err);background:var(--err-bg)}
+.choice:disabled{cursor:default;opacity:.9}
+.btn{font-family:inherit;font-size:15px;font-weight:600;border-radius:11px;padding:12px 22px;cursor:pointer;border:1.5px solid transparent;transition:.15s}
+.btn-primary{background:var(--teal);color:#fff;border-color:var(--teal)}.btn-primary:hover{background:var(--ink)}
+.btn-ghost{background:transparent;color:var(--teal);border-color:var(--line-strong)}.btn-ghost:hover{border-color:var(--teal)}
+.btn-sm{padding:8px 14px;font-size:13px}.btn:disabled{opacity:.4;cursor:default}
+.actions{display:flex;gap:12px;margin-top:24px;align-items:center;flex-wrap:wrap}
+.feedback{margin-top:20px;border-radius:12px;padding:15px 18px;font-size:14.5px;display:none}
+.feedback.show{display:block;animation:rise .25s ease}@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.feedback.ok{background:var(--ok-bg);border:1px solid rgba(46,125,91,.3);color:#1d5a3f}
+.feedback.err{background:var(--err-bg);border:1px solid rgba(180,80,62,.3);color:#7e3326}
+.feedback .head{font-weight:700;margin-bottom:4px}.feedback .why{color:#4a5a52}.feedback.err .why{color:#6b4339}
+.nl-wrap{width:100%;max-width:520px;margin:6px auto}.tick-hit{cursor:pointer}.tick-hit:hover circle.hit{fill:var(--brass-bright)}
+.hintline{font-size:13px;color:#7a8c8e;margin-top:14px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0 8px}
+@media(max-width:560px){.stat-grid{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stat .num{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:700;color:var(--teal);line-height:1}
+.stat .lab{font-size:12px;color:#6a7c7e;font-family:'IBM Plex Mono',monospace;margin-top:6px}
+.name-row{display:flex;gap:10px;align-items:center;margin:22px 0 4px;flex-wrap:wrap}
+.name-row input,.set-input{height:42px;padding:0 14px;border:1.5px solid var(--line-strong);border-radius:10px;font-family:inherit;font-size:15px;background:#fff;color:var(--ink)}
+.name-row input{min-width:220px}.set-input{width:100%;font-family:'IBM Plex Mono',monospace;font-size:13px}
+.name-row label{font-size:13px;color:#5a6e70;font-family:'IBM Plex Mono',monospace}
+.rtable{width:100%;border-collapse:collapse;margin:8px 0;font-size:14px}
+.rtable th,.rtable td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+.rtable th{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#6a7c7e}
+.rtable td.center,.rtable th.center{text-align:center}.rtable .acc{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.rtable tr.untouched td{color:#9aa9aa}.rtable .num-cell{font-family:'IBM Plex Mono',monospace;color:var(--brass);font-weight:600}
+.bar-mini{height:6px;border-radius:4px;background:var(--parchment-2);overflow:hidden;min-width:54px}.bar-mini>span{display:block;height:100%;background:var(--teal)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#EAF0EE;
+  padding:13px 20px;border-radius:12px;font-size:14px;box-shadow:0 10px 30px rgba(15,46,51,.3);opacity:0;transition:.25s;z-index:50;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ws-list{counter-reset:ws}.ws-item{padding:14px 0;border-bottom:1px dashed var(--line);display:flex;gap:14px;align-items:flex-start}
+.ws-item .qn{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--brass);flex:0 0 28px}
+.ws-q{flex:1;font-size:17px}.ws-ans{font-size:13px;color:var(--ok);font-family:'IBM Plex Mono',monospace;display:none}
+.show-ans .ws-ans{display:block;margin-top:6px}
+.set-block{margin:14px 0}.set-block label{display:block;font-size:13px;color:#5a6e70;margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.skip-link{position:absolute;left:-9999px}.skip-link:focus{left:8px;top:8px;background:#fff;padding:8px;z-index:9;border-radius:8px}
+@media print{
+  .side,.tabs,.actions,.no-print{display:none!important}
+  .shell{grid-template-columns:1fr}.main{padding:0;max-width:none}
+  .card{box-shadow:none;border:none}.show-ans .ws-ans{display:block}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">К содержанию</a>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><span class="mark">RBF</span><span class="sub">Tutor</span></div>
+    <div class="tag"><em>Дроби</em></div>
+    <div class="who">Раздел · проверка знаний</div>
+    <ul class="nav" id="nav"></ul>
+    <div class="side-foot" id="syncFoot"></div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<script>
+/* ===================================================================
+   RBF Tutor — раздел «Дроби»
+   11 тем: урок + проверка знаний. Локальное сохранение + (опц.) синхрон
+   с Google Sheets через Apps Script. Генерация наборов заданий.
+   =================================================================== */
+
+/* ---------- математика ---------- */
+const rint=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const choice=a=>a[rint(0,a.length-1)];
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1}
+function lcm(a,b){return Math.abs(a*b)/gcd(a,b)}
+function simplify(n,d){const g=gcd(n,d);return [n/g,d/g]}
+function isLowest(n,d){return gcd(n,d)===1}
+
+/* ---------- отрисовка дробей ---------- */
+function frHTML(n,d,cls=''){return `<span class="fr ${cls}"><span class="n">${n}</span><span class="bar"></span><span class="d">${d}</span></span>`}
+function mixedHTML(w,n,d){return `<span class="mixed"><span class="whole">${w}</span>${frHTML(n,d,'lg')}</span>`}
+function bigFrac(n,d){return `<span class="bigfrac"><span>${n}</span><span class="bar"></span><span>${d}</span></span>`}
+
+/* ---------- SVG-модели ---------- */
+function barSVG(num,den,{w=340,h=58,brassFrom=null}={}){
+  const segW=w/den;let r='';
+  for(let i=0;i<den;i++){
+    let fill='#FCFAF4';
+    if(brassFrom!=null&&brassFrom<=i&&i<num)fill='#B38A4C';
+    else if(i<num)fill='#1C5B59';
+    r+=`<rect x="${i*segW}" y="0" width="${segW}" height="${h}" rx="3" fill="${fill}" stroke="#0F2E33" stroke-width="1.4"/>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" role="img">${r}</svg>`;
+}
+function extBarSVG(den,num,units,{w=420,h=58}={}){
+  const total=den*units,segW=w/total;let r='';
+  for(let i=0;i<total;i++){r+=`<rect x="${i*segW}" y="0" width="${segW}" height="${h}" rx="2" fill="${i<num?'#1C5B59':'#FCFAF4'}" stroke="#0F2E33" stroke-width="1.2"/>`}
+  for(let u=0;u<=units;u++){const x=u*den*segW;r+=`<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="#0F2E33" stroke-width="3"/>`}
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" role="img">${r}</svg>`;
+}
+function twoBarsSVG(a,b,{w=340}={}){
+  const h=58,gap=14;function one(n,sh,y){const seg=w/n;let r='';for(let i=0;i<n;i++)r+=`<rect x="${i*seg}" y="${y}" width="${seg}" height="${h}" rx="3" fill="${i<sh?'#1C5B59':'#FCFAF4'}" stroke="#0F2E33" stroke-width="1.4"/>`;return r;}
+  return `<svg viewBox="0 0 ${w} ${h*2+gap}" width="${w}" role="img">${one(a[0],a[1],0)}${one(b[0],b[1],h+gap)}</svg>`;
+}
+function numberLineSVG(den,markNum,whole=1,{pick=false,w=500}={}){
+  const h=82,padL=24,padR=24,axisY=44,x0=padL,x1=w-padR,total=den*whole;
+  const sx=i=>x0+(x1-x0)*(i/total);let ticks='',labels='',hits='';
+  for(let i=0;i<=total;i++){const x=sx(i),isW=(i%den===0);
+    ticks+=`<line x1="${x}" y1="${axisY-(isW?12:7)}" x2="${x}" y2="${axisY+(isW?12:7)}" stroke="#0F2E33" stroke-width="${isW?2:1.2}"/>`;
+    if(isW)labels+=`<text x="${x}" y="${axisY+30}" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#0F2E33">${i/den}</text>`;
+    if(pick)hits+=`<g class="tick-hit" data-i="${i}" tabindex="0" role="button"><circle class="hit" cx="${x}" cy="${axisY}" r="11" fill="transparent"/><circle cx="${x}" cy="${axisY}" r="4.5" fill="#B38A4C" opacity="0"/></g>`;
+  }
+  let marker='';
+  if(!pick&&markNum!=null){const x=sx(markNum);marker=`<line x1="${x}" y1="${axisY-24}" x2="${x}" y2="${axisY}" stroke="#B38A4C" stroke-width="2"/><polygon points="${x-7},${axisY-24} ${x+7},${axisY-24} ${x},${axisY-12}" fill="#B38A4C"/><circle cx="${x}" cy="${axisY}" r="5" fill="#B38A4C"/>`}
+  const arrows=`<line x1="${x0-13}" y1="${axisY}" x2="${x1+13}" y2="${axisY}" stroke="#0F2E33" stroke-width="2"/><polygon points="${x1+13},${axisY} ${x1+4},${axisY-5} ${x1+4},${axisY+5}" fill="#0F2E33"/><polygon points="${x0-13},${axisY} ${x0-4},${axisY-5} ${x0-4},${axisY+5}" fill="#0F2E33"/>`;
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" role="img">${arrows}${ticks}${labels}${marker}${hits}</svg>`;
+}
+function areaGridSVG(cols,rows,sc,sr,{w=210}={}){
+  const h=w*rows/cols*0.92,cw=w/cols,rh=h/rows;let r='';
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const inside=(x<sc&&y<sr);r+=`<rect x="${x*cw}" y="${y*rh}" width="${cw}" height="${rh}" fill="${inside?'#1C5B59':'#FCFAF4'}" stroke="#0F2E33" stroke-width="1"/>`}
+  r+=`<rect x="0" y="0" width="${cw*sc}" height="${h}" fill="none" stroke="#B38A4C" stroke-width="2.4"/><rect x="0" y="0" width="${w}" height="${rh*sr}" fill="none" stroke="#B38A4C" stroke-width="2.4"/>`;
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" role="img">${r}</svg>`;
+}
+function hundredGridSVG(k,{w=190}={}){
+  const cw=w/10;let r='',f=0;
+  for(let y=0;y<10;y++)for(let x=0;x<10;x++){r+=`<rect x="${x*cw}" y="${y*cw}" width="${cw}" height="${cw}" fill="${f<k?'#1C5B59':'#FCFAF4'}" stroke="#B8AA96" stroke-width="0.8"/>`;f++}
+  r+=`<rect x="0" y="0" width="${w}" height="${w}" fill="none" stroke="#0F2E33" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 ${w} ${w}" width="${w}" role="img">${r}</svg>`;
+}
+const fig=(svg,cap)=>`<figure>${svg}${cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;
+const C=(kind,lead,text)=>`<div class="callout c-${kind}">${lead?`<b>${lead}</b> `:''}${text}</div>`;
+
+/* ===================== ГЕНЕРАТОРЫ ЗАДАНИЙ ===================== */
+const GEN={
+  basics(){const den=rint(2,8),num=rint(1,den-1);return{
+    promptHTML:`Какая часть полоски закрашена? Запиши дробью.`,visualHTML:barSVG(num,den),
+    ans:frHTML(num,den,'lg'),input:{type:'fraction'},
+    check:a=>({ok:+a.n===num&&+a.d===den,correctText:frHTML(num,den,'lg')}),
+    hint:'Знаменатель — на сколько долей разделено целое. Числитель — сколько закрашено.',
+    wrongWhy:a=>+a.d!==den?`Знаменатель — сколько всего равных долей (${den}).`:`Числитель — закрашенные доли (${num}).`};},
+
+  types(){const sub=choice(['classify','toMixed']);
+    if(sub==='classify'){const proper=Math.random()<.5,den=rint(2,9),num=proper?rint(1,den-1):rint(den+1,den+8);return{
+      promptHTML:`Это правильная или неправильная дробь? &nbsp;${frHTML(num,den,'lg')}`,ans:num<den?'Правильная':'Неправильная',
+      input:{type:'choice',options:['Правильная','Неправильная']},
+      check:a=>({ok:a===(num<den?'Правильная':'Неправильная'),correctText:num<den?'Правильная':'Неправильная'}),
+      hint:'Правильная — числитель меньше знаменателя.',wrongWhy:()=>`${num} ${num<den?'<':'≥'} ${den}, значит дробь ${num<den?'правильная':'неправильная'}.`};}
+    const den=rint(2,7),whole=rint(1,4),rem=rint(1,den-1),num=whole*den+rem;return{
+      promptHTML:`Переведи в смешанное число: &nbsp;${frHTML(num,den,'lg')}`,ans:mixedHTML(whole,rem,den),input:{type:'mixed'},
+      check:a=>({ok:+a.w===whole&&+a.n===rem&&+a.d===den,correctText:mixedHTML(whole,rem,den)}),
+      hint:'Раздели числитель на знаменатель: частное — целое, остаток — числитель.',
+      wrongWhy:()=>`${num} ÷ ${den} = ${whole} (ост. ${rem}) → ${mixedHTML(whole,rem,den)}.`};},
+
+  numberline(){const pick=Math.random()<.5,den=rint(2,6);
+    if(!pick){const num=rint(1,den*2-1);return{
+      promptHTML:`Какое число отмечено стрелкой?`,visualHTML:`<div class="nl-wrap">${numberLineSVG(den,num,2)}</div>`,
+      ans:frHTML(num,den,'lg'),input:{type:'fraction'},
+      check:a=>({ok:+a.n*den===num*+a.d,correctText:frHTML(num,den,'lg')}),
+      hint:'Размер одной доли = 1 ÷ знаменатель. Сосчитай доли до стрелки.',
+      wrongWhy:()=>`Каждый шаг — 1/${den}. До стрелки их ${num} → ${frHTML(num,den)}.`};}
+    const num=rint(1,den*2-1);return{
+      promptHTML:`Нажми на точку ${frHTML(num,den,'lg')} на прямой.`,visualHTML:`<div class="nl-wrap" id="nlpick">${numberLineSVG(den,null,2,{pick:true})}</div>`,
+      ans:frHTML(num,den),input:{type:'numberline',target:num},
+      check:a=>({ok:+a===num,correctText:frHTML(num,den)}),hint:'Отсчитай доли вправо от нуля.',
+      wrongWhy:a=>`Нужная точка — ${num}-я доля от нуля. Ты выбрал ${a}-ю.`};},
+
+  equiv(){const sub=choice(['simplify','fill']);
+    if(sub==='simplify'){const bn=rint(1,5),bd=rint(2,7),k=rint(2,5),num=bn*k,den=bd*k,[sn,sd]=simplify(num,den);return{
+      promptHTML:`Сократи до несократимой: &nbsp;${frHTML(num,den,'lg')}`,ans:frHTML(sn,sd,'lg'),input:{type:'fraction'},
+      check:a=>({ok:+a.n===sn&&+a.d===sd,correctText:frHTML(sn,sd,'lg')}),
+      hint:'Раздели числитель и знаменатель на их наибольший общий делитель.',
+      wrongWhy:a=>(+a.n*sd===sn*+a.d)?`Верно по величине, но ещё сокращается → ${frHTML(sn,sd)}.`:`НОД(${num},${den})=${gcd(num,den)} → ${frHTML(sn,sd)}.`};}
+    const bn=rint(1,5),bd=rint(bn+1,8),k=rint(2,5),blankNum=Math.random()<.5;return{
+      promptHTML:`Заполни пропуск: &nbsp;${frHTML(bn,bd,'lg')} = ${blankNum?frHTML('?',bd*k,'lg'):frHTML(bn*k,'?','lg')}`,
+      ans:String(blankNum?bn*k:bd*k),input:{type:'single',label:blankNum?'числитель':'знаменатель'},
+      check:a=>({ok:+a===(blankNum?bn*k:bd*k),correctText:String(blankNum?bn*k:bd*k)}),
+      hint:'Умножь числитель на то же число, что и знаменатель.',
+      wrongWhy:()=>`Знаменатель умножили на ${k}, значит и числитель: ${bn}×${k}=${bn*k}.`};},
+
+  compare(){let a,b,c,d;
+    if(Math.random()<.5){const n=rint(1,4);a=n;c=n;b=rint(2,9);do{d=rint(2,9)}while(d===b);}
+    else{a=rint(1,8);b=rint(a+1,10);c=rint(1,8);d=rint(c+1,10);if(a*d===c*b)d++;}
+    const rel=a/b<c/d?'<':a/b>c/d?'>':'=';return{
+      promptHTML:`Сравни: &nbsp;${frHTML(a,b,'lg')} <span class="op">?</span> ${frHTML(c,d,'lg')}`,ans:rel,
+      input:{type:'choice',options:['<','=','>']},
+      check:x=>({ok:x===rel,correctText:`${frHTML(a,b)} ${rel} ${frHTML(c,d)}`}),
+      hint:'Крест-накрест: сравни a·d и c·b.',
+      wrongWhy:()=>`${a}×${d}=${a*d}, ${c}×${b}=${c*b}. Значит ${frHTML(a,b)} ${rel} ${frHTML(c,d)}.`+((b!==d&&a===c)?` Ловушка: больше знаменатель — меньше доля.`:'')};},
+
+  addsame(){const d=rint(3,10);let a=rint(1,d-1),b=rint(1,d-1);const plus=Math.random()<.5||a+b<d;if(!plus&&a<b)[a,b]=[b,a];
+    const rn=plus?a+b:a-b,[sn,sd]=simplify(rn,d);return{
+      promptHTML:`Вычисли и сократи: &nbsp;${frHTML(a,d,'lg')} <span class="op">${plus?'+':'−'}</span> ${frHTML(b,d,'lg')}`,
+      ans:frHTML(sn,sd,'lg'),input:{type:'fraction'},
+      check:x=>({ok:+x.n===sn&&+x.d===sd,correctText:frHTML(sn,sd,'lg')}),
+      hint:'Знаменатель не меняется. Складываем (вычитаем) только числители.',
+      wrongWhy:x=>(+x.d===2*d)?`Знаменатель остаётся ${d}. ${a}${plus?'+':'−'}${b}=${rn} → ${frHTML(sn,sd)}.`:`${a}${plus?'+':'−'}${b}=${rn}, знаменатель ${d} → ${frHTML(sn,sd)}.`};},
+
+  adddiff(){let b=rint(2,6),d=rint(2,7);if(b===d)d++;let a=rint(1,Math.max(1,b-1)),c=rint(1,Math.max(1,d-1));
+    const L=lcm(b,d);let rn=a*(L/b)+c*(L/d),plus=true;
+    if(Math.random()<.5){if(a/b<c/d){[a,b,c,d]=[c,d,a,b];}rn=a*(L/b)-c*(L/d);plus=false;}
+    const[sn,sd]=simplify(rn,L);return{
+      promptHTML:`Приведи к общему знаменателю и вычисли: &nbsp;${frHTML(a,b,'lg')} <span class="op">${plus?'+':'−'}</span> ${frHTML(c,d,'lg')}`,
+      ans:frHTML(sn,sd,'lg'),input:{type:'fraction'},
+      check:x=>({ok:+x.n*sd===sn*+x.d&&isLowest(+x.n,+x.d),correctText:frHTML(sn,sd,'lg')}),
+      hint:`Общий знаменатель = НОК(${b},${d}) = ${L}.`,
+      wrongWhy:x=>(+x.n===a+c&&+x.d===b+d)?`Нельзя складывать знаменатели. НОК(${b},${d})=${L}.`:(+x.n*sd===sn*+x.d)?`Верно, но не сокращено → ${frHTML(sn,sd)}.`:`${frHTML(a,b)}=${frHTML(a*(L/b),L)}, ${frHTML(c,d)}=${frHTML(c*(L/d),L)} → ${frHTML(sn,sd)}.`};},
+
+  multiply(){const a=rint(1,6),b=rint(2,7),c=rint(1,6),d=rint(2,7),[sn,sd]=simplify(a*c,b*d);return{
+    promptHTML:`Перемножь и сократи: &nbsp;${frHTML(a,b,'lg')} <span class="op">×</span> ${frHTML(c,d,'lg')}`,
+    ans:frHTML(sn,sd,'lg'),input:{type:'fraction'},
+    check:x=>({ok:+x.n===sn&&+x.d===sd,correctText:frHTML(sn,sd,'lg')}),
+    hint:'Числитель × числитель, знаменатель × знаменатель.',
+    wrongWhy:()=>`${a}×${c}=${a*c}, ${b}×${d}=${b*d} → ${frHTML(sn,sd)}.`};},
+
+  divide(){const a=rint(1,6),b=rint(2,7),c=rint(1,6),d=rint(2,7),[sn,sd]=simplify(a*d,b*c);return{
+    promptHTML:`Раздели и сократи: &nbsp;${frHTML(a,b,'lg')} <span class="op">÷</span> ${frHTML(c,d,'lg')}`,
+    ans:frHTML(sn,sd,'lg'),input:{type:'fraction'},
+    check:x=>({ok:+x.n===sn&&+x.d===sd,correctText:frHTML(sn,sd,'lg')}),
+    hint:'Переверни вторую дробь и умножь.',
+    wrongWhy:()=>`÷${frHTML(c,d)} → ×${frHTML(d,c)}: ${frHTML(a,b)}×${frHTML(d,c)} → ${frHTML(sn,sd)}.`};},
+
+  decimals(){const P=[[1,2,.5,50],[1,4,.25,25],[3,4,.75,75],[1,5,.2,20],[2,5,.4,40],[3,5,.6,60],[1,10,.1,10],[7,10,.7,70],[1,20,.05,5],[1,25,.04,4],[3,10,.3,30]];
+    const[n,d,dec,pct]=choice(P),askPct=Math.random()<.5;
+    if(askPct)return{promptHTML:`Сколько это процентов? &nbsp;${frHTML(n,d,'lg')}`,ans:pct+'%',input:{type:'single',label:'%'},
+      check:a=>({ok:+a===pct,correctText:pct+'%'}),hint:'Доведи дробь до сотых.',wrongWhy:()=>`${frHTML(n,d)} = ${frHTML(pct,100)} = ${pct}%.`};
+    return{promptHTML:`Запиши десятичной дробью: &nbsp;${frHTML(n,d,'lg')}`,ans:String(dec).replace('.',','),input:{type:'single',label:'десятичная'},
+      check:a=>({ok:Math.abs(+String(a).replace(',','.')-dec)<1e-9,correctText:String(dec).replace('.',',')}),
+      hint:'Раздели числитель на знаменатель.',wrongWhy:()=>`${n} ÷ ${d} = ${String(dec).replace('.',',')}.`};},
+
+  word(){const N=[['конфет','раздали'],['страниц','прочитали'],['метров ленты','отрезали'],['рублей','потратили'],['яблок','съели']];
+    const[thing,verb]=choice(N),d=choice([2,3,4,5,6,8]),n=rint(1,d-1),total=d*rint(2,9),ans=total/d*n;return{
+      promptHTML:`Было ${total} ${thing}. ${verb} ${frHTML(n,d)} от всего. Сколько это?`,ans:String(ans),input:{type:'single',label:'ответ'},
+      check:a=>({ok:+a===ans,correctText:String(ans)}),hint:'Раздели на знаменатель, умножь на числитель.',
+      wrongWhy:()=>`${total} ÷ ${d} = ${total/d}, ×${n} = ${ans}.`};}
+};
+
+/* ===================== УРОКИ (контент) ===================== */
+const LESSON={
+  basics:()=>`
+    <h2>Большая идея</h2>
+    <p>Возьмём полоску шоколада и разломим её на <span class="lead">равные</span> кусочки. Каждый такой кусочек — это <b>доля</b>. Дробь показывает две вещи: на сколько равных частей разделили целое и сколько частей взяли.</p>
+    ${fig(barSVG(3,4,{w:300}),'4 равные дольки, закрашены 3 → это 3/4')}
+    <p>Записывают это так:</p>
+    <p style="text-align:center">${bigFrac(3,4)}</p>
+    <h2>Два числа дроби</h2>
+    <p><b>Нижнее — знаменатель.</b> На сколько равных долей разделили целое. <b>Верхнее — числитель.</b> Сколько долей взяли.</p>
+    ${C('teal','Как запомнить:','числитель — «число» взятых кусочков (сверху), знаменатель — на сколько разделили (снизу).')}
+    <h2>Главное правило</h2>
+    <p>Доли обязательно должны быть <b>равными</b>. Если части разного размера — дробью их называть нельзя.</p>
+    ${fig(twoBarsSVG([4,0],[4,0],{w:300}).replace('1C5B59','1C5B59'),'Слева — честные равные доли; неравные части долями не считаются')}`,
+  types:()=>`
+    <h2>Большая идея</h2>
+    <p>Если числитель меньше знаменателя — дробь меньше целого. Это <b>правильная</b> дробь.</p>
+    ${fig(barSVG(3,4,{w:300}),'3/4 — меньше целого')}
+    <p>Если долей больше, чем помещается в одном целом — дробь больше единицы. Это <b>неправильная</b> дробь.</p>
+    ${fig(extBarSVG(3,5,2),'5/3 — одно целое и ещё 2/3, то есть смешанное число 1 2/3')}
+    ${C('teal','Запомни:','правильная дробь меньше 1, неправильная — больше или равна 1.')}
+    <h2>Перевод в смешанное число</h2>
+    <p>Делим числитель на знаменатель: частное — целая часть, остаток — новый числитель. Например, 7/4 = 1 целое 3/4.</p>`,
+  numberline:()=>`
+    <h2>Большая идея</h2>
+    <p>Дробь — это <b>число</b>, и у него есть место на числовой прямой. Отрезок от 0 до 1 — это одно целое; делим его на равные доли.</p>
+    ${fig(`<div class="nl-wrap">${numberLineSVG(4,3,1)}</div>`,'Отрезок 0–1 разделён на 4 доли; стрелка на 3/4')}
+    ${C('teal','Подсказка:','знаменатель — на сколько долей разделён отрезок 0–1; числитель — сколько шагов от нуля до точки.')}
+    <p>Чем дальше точка от нуля — тем больше дробь. Между любыми двумя дробями всегда есть ещё дроби.</p>`,
+  equiv:()=>`
+    <h2>Одно число — разные имена</h2>
+    <p>Две одинаковые полоски: верхняя разделена пополам, нижняя — на четыре. Закрашено поровну!</p>
+    ${fig(twoBarsSVG([2,1],[4,2],{w:300}),'1/2 и 2/4 — одна и та же величина')}
+    ${C('teal','Основное свойство дроби:','если умножить числитель и знаменатель на одно число, дробь не изменится. 1/2 = 2/4.')}
+    <h2>Сокращение</h2>
+    <p>Сокращать — делить числитель и знаменатель на одно число. 6/8 = 3/4 (делим на 2).</p>
+    ${C('err','Ошибка:','из числителя и знаменателя нельзя вычитать — только делить или умножать.')}`,
+  compare:()=>`
+    <h2>Большая идея</h2>
+    <p>Одинаковые знаменатели — больше та дробь, где числитель больше. А вот хитрость:</p>
+    ${fig(twoBarsSVG([6,1],[8,1],{w:300}),'1/6 больше, чем 1/8 — хотя 8 больше 6')}
+    ${C('err','Запомни:','при равных числителях больше та дробь, где знаменатель МЕНЬШЕ — доля крупнее.')}
+    <h2>Если всё разное</h2>
+    <p>Сравниваем «крест-накрест»: для 2/3 и 3/5 считаем 2×5=10 и 3×3=9. Десять больше и стоит со стороны 2/3 → 2/3 больше.</p>`,
+  addsame:()=>`
+    <h2>Большая идея</h2>
+    <p>Две четверти плюс одна четверть — три четверти. Складываем только числители, знаменатель оставляем тот же.</p>
+    ${fig(barSVG(3,4,{w:300,brassFrom:2}),'2/4 (зелёные) + 1/4 (золотая) = 3/4')}
+    ${C('teal','Правило:','при одинаковом знаменателе складываем/вычитаем числители, знаменатель не меняем.')}
+    ${C('err','Ошибка:','знаменатели не складывают. 2/4 + 1/4 = 3/4, а не 3/8.')}
+    <p>Не забывай сокращать ответ: 2/6 + 2/6 = 4/6 = 2/3.</p>`,
+  adddiff:()=>`
+    <h2>Большая идея</h2>
+    <p>Нельзя сложить 3 яблока и 2 апельсина. Так же нельзя сразу сложить 1/4 и 1/8 — сначала «переименуем»: 1/4 = 2/8.</p>
+    ${fig(twoBarsSVG([4,1],[8,2],{w:300}),'1/4 и 2/8 — одинаковой длины')}
+    <p>Теперь обе дроби в восьмых: 2/8 + 1/8 = 3/8.</p>
+    ${C('teal','Как действовать:','1) найди общий знаменатель; 2) приведи к нему обе дроби; 3) сложи числители.')}
+    ${C('err','Ошибка:','1/2 + 1/3 — это НЕ 2/5. Общий знаменатель 6: 3/6 + 2/6 = 5/6.')}`,
+  multiply:()=>`
+    <h2>Большая идея</h2>
+    <p>Умножить дроби — найти «часть от части». 1/2 × 1/4 — это половина от четверти.</p>
+    ${fig(areaGridSVG(4,2,1,1),'Пересечение — 1 клетка из 8 → 1/2 × 1/4 = 1/8')}
+    ${C('teal','Правило:','числитель × числитель, знаменатель × знаменатель.')}
+    ${fig(areaGridSVG(4,3,3,2),'2/3 × 3/4 = 6/12 = 1/2')}
+    ${C('brass','Сюрприз:','12 × 1/3 = 4 — меньше, чем 12. Взять часть значит уменьшить.')}`,
+  divide:()=>`
+    <h2>Большая идея</h2>
+    <p>Деление спрашивает: сколько раз одна дробь помещается в другой? Сколько четвертинок в половинке?</p>
+    ${fig(barSVG(2,4,{w:300}),'В половине полоски — две четвертинки, значит 1/2 ÷ 1/4 = 2')}
+    ${C('teal','Секрет:','чтобы разделить на дробь — переверни её и умножь. 1/2 ÷ 1/4 = 1/2 × 4/1 = 2.')}
+    <p>Ещё пример: 2/3 ÷ 3/4 = 2/3 × 4/3 = 8/9.</p>`,
+  decimals:()=>`
+    <h2>Большая идея</h2>
+    <p>Одно число — три записи. Большой квадрат из 100 клеток это целое; закрасим 75:</p>
+    ${fig(hundredGridSVG(75),'75 из 100 = 75/100 = 0,75 = 75%')}
+    ${C('teal','Связь:','процент — это сотые доли. 3/4 = 75/100 = 75%.')}
+    ${C('err','Ловушка:','0,2 больше, чем 0,15 — ведь 0,2 = 0,20, а 20 сотых больше 15 сотых.')}`,
+  word:()=>`
+    <h2>Большая идея</h2>
+    <p>Чтобы найти дробь от числа: раздели число на знаменатель (одна доля), затем умножь на числитель.</p>
+    ${fig(barSVG(3,4,{w:300}),'3/4 от 12: 12 ÷ 4 = 3, затем 3 × 3 = 9')}
+    ${C('teal','Правило:','дробь от числа = (число ÷ знаменатель) × числитель.')}
+    <h2>Обратная задача</h2>
+    <p>Если известна часть, а нужно целое — наоборот: раздели на числитель, умножь на знаменатель. Если 2/3 это 10, то целое = 10 ÷ 2 × 3 = 15.</p>`
+};
+
+/* ===================== ТЕМЫ ===================== */
+const TOPICS=[
+  {id:'basics',num:'01',gen:'basics',title:'Что такое дробь',eyebrow:'Доля · числитель · знаменатель',blurb:'Дробь как равные доли целого: учимся читать и записывать.'},
+  {id:'types',num:'02',gen:'types',title:'Виды дробей',eyebrow:'Правильные · неправильные · смешанные',blurb:'Дробь меньше, равна или больше единицы; перевод в смешанное число.'},
+  {id:'numberline',num:'03',gen:'numberline',title:'Числовая прямая',eyebrow:'Дробь как мера',blurb:'Каждая дробь — точка на прямой со своей величиной.'},
+  {id:'equiv',num:'04',gen:'equiv',title:'Равные дроби и сокращение',eyebrow:'Основное свойство дроби',blurb:'Переименование величины и сокращение до несократимой.'},
+  {id:'compare',num:'05',gen:'compare',title:'Сравнение дробей',eyebrow:'Кто больше',blurb:'Сравнение и главная ловушка про знаменатель.'},
+  {id:'addsame',num:'06',gen:'addsame',title:'Сложение и вычитание · одинаковые знаменатели',eyebrow:'Техника · шаг 1',blurb:'Складываем количества долей, имя доли не трогаем.'},
+  {id:'adddiff',num:'07',gen:'adddiff',title:'Сложение и вычитание · разные знаменатели',eyebrow:'Техника · шаг 2',blurb:'Общий знаменатель — и считаем.'},
+  {id:'multiply',num:'08',gen:'multiply',title:'Умножение дробей',eyebrow:'Часть от части',blurb:'Числитель на числитель, знаменатель на знаменатель.'},
+  {id:'divide',num:'09',gen:'divide',title:'Деление дробей',eyebrow:'Сколько раз укладывается',blurb:'Умножаем на обратную дробь.'},
+  {id:'decimals',num:'10',gen:'decimals',title:'Дроби, десятичные и проценты',eyebrow:'Одно число — три записи',blurb:'Переходы между дробью, десятичной и процентом.'},
+  {id:'word',num:'11',gen:'word',title:'Дробь от числа · задачи',eyebrow:'Применение',blurb:'Находим часть от числа — основа задач и процентов.'}
+];
+
+/* ===================== СОСТОЯНИЕ + ХРАНИЛИЩЕ ===================== */
+const STORE='rbf_drobi_v1';
+const progress={};TOPICS.forEach(t=>progress[t.id]={correct:0,attempts:0});
+let studentName='',tutorEndpoint='';
+let current=null,tab='lesson',problem=null,answered=false,selected=null,streak=0;
+
+function saveState(){try{localStorage.setItem(STORE,JSON.stringify({name:studentName,endpoint:tutorEndpoint,progress,ts:Date.now()}))}catch(e){}}
+function loadState(){try{const d=JSON.parse(localStorage.getItem(STORE)||'null');if(!d)return;
+  if(d.name)studentName=d.name;if(d.endpoint)tutorEndpoint=d.endpoint;
+  if(d.progress)TOPICS.forEach(t=>{if(d.progress[t.id])progress[t.id]=d.progress[t.id]});}catch(e){}}
+loadState();
+
+/* отправка результата в Google Sheets (если задан endpoint) */
+function syncSession(topicId){
+  if(!tutorEndpoint)return false;
+  const p=progress[topicId],topic=TOPICS.find(t=>t.id===topicId);
+  const payload={student:studentName||'без имени',topic:topic.title,topicNum:topic.num,
+    correct:p.correct,attempts:p.attempts,accuracy:p.attempts?Math.round(100*p.correct/p.attempts):0,
+    date:new Date().toISOString()};
+  try{fetch(tutorEndpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});return true;}
+  catch(e){return false;}
+}
+
+/* ===================== ВСПОМОГАТЕЛЬНОЕ UI ===================== */
+function toast(msg){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el);}el.textContent=msg;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3200);}
+function resultRows(){return TOPICS.map(t=>{const p=progress[t.id],a=p.attempts?Math.round(100*p.correct/p.attempts):0;return[t.num,t.title,p.correct,p.attempts,a];});}
+function downloadText(text,fn,mime){try{const b=new Blob(['\ufeff'+text],{type:mime+';charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},120);toast('Файл сохранён: '+fn);}catch(e){toast('Скачивание недоступно — открой файл в браузере.');}}
+function exportCSV(){const head=['Тема №','Тема','Верно','Попыток','Точность %'];const esc=x=>`"${String(x).replace(/"/g,'""')}"`;const lines=[['Ученик',studentName||'без имени'],['Дата',new Date().toLocaleDateString('ru-RU')],[],head,...resultRows()].map(r=>r.map(esc).join(','));downloadText(lines.join('\n'),`RBF_дроби_${studentName||'ученик'}.csv`,'text/csv');}
+function copyForSheets(){const head=['Тема №','Тема','Верно','Попыток','Точность %'];const rows=[['Ученик',studentName||'без имени'],['Дата',new Date().toLocaleDateString('ru-RU')],[],head,...resultRows()];const tsv=rows.map(r=>r.join('\t')).join('\n');if(navigator.clipboard?.writeText)navigator.clipboard.writeText(tsv).then(()=>toast('Скопировано — вставь в Google Sheets')).catch(()=>fbCopy(tsv));else fbCopy(tsv);}
+function fbCopy(text){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Скопировано');}catch(e){toast('Скопируй вручную');}ta.remove();}
+
+/* ===================== НАВИГАЦИЯ ===================== */
+const navEl=document.getElementById('nav');
+function renderNav(){
+  navEl.innerHTML='';
+  const add=(html,cls,on)=>{const b=document.createElement('button');b.innerHTML=html;b.className=cls;b.onclick=on;navEl.appendChild(b);};
+  add(`<span class="idx">★</span><span class="lbl">Обзор и результаты</span>`,current===null&&tab!=='settings'?'active':'',()=>{current=null;tab='home';renderNav();renderHome();});
+  const sec=document.createElement('div');sec.className='sec';sec.textContent='Проверка знаний';navEl.appendChild(sec);
+  TOPICS.forEach(t=>{const p=progress[t.id];const done=p.attempts?`<span class="done">${p.correct}/${p.attempts}</span>`:'';
+    add(`<span class="idx">${t.num}</span><span class="lbl">${t.title}</span>${done}`,current===t.id?'active':'',()=>openTopic(t.id));});
+  const sec2=document.createElement('div');sec2.className='sec';sec2.textContent='Для репетитора';navEl.appendChild(sec2);
+  add(`<span class="idx">⚙</span><span class="lbl">Настройки и журнал</span>`,tab==='settings'?'active':'',()=>{current=null;tab='settings';renderNav();renderSettings();});
+  const foot=document.getElementById('syncFoot');
+  foot.innerHTML=tutorEndpoint?`<span class="sync-dot sync-on"></span>Журнал подключён`:`<span class="sync-dot sync-off"></span>Журнал не подключён`;
+}
+
+/* ===================== ОБЗОР ===================== */
+function renderHome(){
+  const tc=Object.values(progress).reduce((s,p)=>s+p.correct,0),ta=Object.values(progress).reduce((s,p)=>s+p.attempts,0);
+  const acc=ta?Math.round(100*tc/ta):0,started=Object.values(progress).filter(p=>p.attempts>0).length;
+  const rows=TOPICS.map(t=>{const p=progress[t.id],a=p.attempts?Math.round(100*p.correct/p.attempts):0;
+    return `<tr class="${p.attempts?'':'untouched'}"><td class="num-cell">${t.num}</td><td>${t.title}</td><td class="center">${p.correct}</td><td class="center">${p.attempts}</td><td class="center"><div style="display:flex;align-items:center;gap:8px;justify-content:center"><span class="bar-mini"><span style="width:${a}%"></span></span><span class="acc">${p.attempts?a+'%':'—'}</span></div></td></tr>`;}).join('');
+  document.getElementById('main').innerHTML=`
+    <div class="eyebrow">RBF Tutor · раздел «Дроби»</div>
+    <h1 class="topic">Дроби: урок и проверка<br>в одиннадцати темах</h1>
+    <p class="blurb">Каждая тема — это короткий урок с моделями и проверка знаний с бесконечной генерацией заданий. Результаты сохраняются и могут отправляться в твой журнал Google Sheets.</p>
+    <div class="name-row"><label for="stName">Ученик:</label><input id="stName" placeholder="Имя ученика" value="${(studentName||'').replace(/"/g,'&quot;')}"></div>
+    <div class="stat-grid">
+      <div class="stat"><div class="num">${tc}</div><div class="lab">верных ответов</div></div>
+      <div class="stat"><div class="num">${acc}%</div><div class="lab">общая точность</div></div>
+      <div class="stat"><div class="num">${started}/${TOPICS.length}</div><div class="lab">тем начато</div></div>
+    </div>
+    <div class="card" style="margin-top:24px">
+      <div class="prompt" style="margin-top:0">Результаты по темам</div>
+      <table class="rtable"><thead><tr><th>№</th><th>Тема</th><th class="center">Верно</th><th class="center">Попыток</th><th class="center">Точность</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn btn-primary" id="copyS">Скопировать для Google Sheets</button>
+        <button class="btn btn-ghost" id="dlC">Скачать CSV</button>
+        <button class="btn btn-ghost" id="rst">Сбросить</button>
+      </div>
+      <div class="hintline">«Скопировать» → открой таблицу → A1 → Ctrl+V. Для автоматического журнала настрой подключение в разделе «Настройки и журнал».</div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="prompt" style="margin-top:0">С чего начать?</div>
+      <p class="blurb" style="margin:6px 0 16px">Открой любую тему слева: вкладка «Урок» — объяснение, «Проверка знаний» — задания, «Сгенерировать набор» — готовый лист для печати.</p>
+      <div class="actions" style="margin-top:0"><button class="btn btn-primary" id="g1">Открыть тему 01 →</button></div>
+    </div>`;
+  const nm=document.getElementById('stName');nm.addEventListener('change',()=>{studentName=nm.value.trim();saveState();renderNav();});
+  document.getElementById('copyS').onclick=copyForSheets;document.getElementById('dlC').onclick=exportCSV;
+  document.getElementById('rst').onclick=()=>{if(confirm('Сбросить все результаты?')){TOPICS.forEach(t=>progress[t.id]={correct:0,attempts:0});streak=0;saveState();renderNav();renderHome();toast('Сброшено');}};
+  document.getElementById('g1').onclick=()=>openTopic('basics');
+}
+
+/* ===================== НАСТРОЙКИ ===================== */
+function renderSettings(){
+  document.getElementById('main').innerHTML=`
+    <div class="eyebrow">для репетитора</div>
+    <h1 class="topic">Настройки и журнал</h1>
+    <p class="blurb">Чтобы видеть результаты учеников удалённо, подключи журнал Google Sheets. Сайт будет отправлять итог каждой проверки в твою таблицу.</p>
+    <div class="card">
+      <div class="prompt" style="margin-top:0">Ссылка на журнал (Apps Script Web App)</div>
+      <p class="blurb" style="margin:6px 0 14px">Вставь URL веб-приложения Apps Script. Инструкция — в файле README и apps_script.gs из набора для деплоя.</p>
+      <input class="set-input" id="ep" placeholder="https://script.google.com/macros/s/..../exec" value="${(tutorEndpoint||'').replace(/"/g,'&quot;')}">
+      <div class="actions">
+        <button class="btn btn-primary" id="saveEp">Сохранить ссылку</button>
+        <button class="btn btn-ghost" id="testEp">Отправить тест</button>
+        <button class="btn btn-ghost" id="clrEp">Отключить</button>
+      </div>
+      <div class="hintline">Статус: ${tutorEndpoint?'<b style="color:#2E7D5B">журнал подключён</b>':'журнал не подключён (данные хранятся локально и в CSV)'}</div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <div class="prompt" style="margin-top:0">Как это работает</div>
+      <p class="blurb" style="margin:6px 0 0">После каждой проверки в таблицу добавляется строка: имя ученика, тема, верных, попыток, точность, дата. Так ты видишь прогресс всех учеников в одном месте. Если ссылка не задана — результаты всё равно копятся на устройстве и выгружаются в CSV из «Обзора».</p>
+    </div>`;
+  document.getElementById('saveEp').onclick=()=>{tutorEndpoint=document.getElementById('ep').value.trim();saveState();renderNav();renderSettings();toast('Ссылка сохранена');};
+  document.getElementById('clrEp').onclick=()=>{tutorEndpoint='';document.getElementById('ep').value='';saveState();renderNav();renderSettings();toast('Журнал отключён');};
+  document.getElementById('testEp').onclick=()=>{tutorEndpoint=document.getElementById('ep').value.trim();if(!tutorEndpoint){toast('Сначала вставь ссылку');return;}const ok=syncSession('basics');toast(ok?'Тест отправлен — проверь таблицу':'Не удалось отправить');};
+}
+
+/* ===================== ТЕМА (вкладки) ===================== */
+function openTopic(id){current=id;tab='lesson';answered=false;selected=null;renderNav();renderTopic();}
+function renderTopic(){
+  const t=TOPICS.find(x=>x.id===current);
+  document.getElementById('main').innerHTML=`
+    <div class="eyebrow">${t.eyebrow}</div>
+    <h1 class="topic">${t.title}</h1>
+    <p class="blurb">${t.blurb}</p>
+    <div class="tabs">
+      <button class="tab ${tab==='lesson'?'active':''}" data-t="lesson">Урок</button>
+      <button class="tab ${tab==='check'?'active':''}" data-t="check">Проверка знаний</button>
+      <button class="tab ${tab==='gen'?'active':''}" data-t="gen">Сгенерировать набор</button>
+    </div>
+    <div id="tabBody"></div>`;
+  document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;answered=false;selected=null;renderTopic();});
+  if(tab==='lesson')renderLesson(t);
+  else if(tab==='check'){problem=GEN[t.gen]();renderCheck(t);}
+  else renderGen(t);
+}
+
+function renderLesson(t){
+  document.getElementById('tabBody').innerHTML=`<div class="card lesson">${LESSON[t.id]()}
+    <div class="actions"><button class="btn btn-primary" id="toCheck">Перейти к проверке знаний →</button></div></div>`;
+  document.getElementById('toCheck').onclick=()=>{tab='check';answered=false;selected=null;renderTopic();};
+}
+
+/* --------- проверка знаний (раннер) --------- */
+function renderCheck(t){
+  const p=progress[t.id];
+  document.getElementById('tabBody').innerHTML=`
+    <div class="card">
+      <div class="card-head"><span class="q-counter">Решено ${p.correct} из ${p.attempts}</span><span class="streak">серия <b>${streak}</b>🔥</span></div>
+      <div class="prompt">${problem.promptHTML}</div>
+      ${problem.visualHTML?`<div class="visual">${problem.visualHTML}</div>`:''}
+      <div id="inputArea"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="checkBtn">Проверить</button>
+        <button class="btn btn-ghost" id="hintBtn">Подсказка</button>
+        <button class="btn btn-ghost" id="nextBtn" style="display:none">Следующее →</button>
+        <button class="btn btn-ghost btn-sm" id="saveBtn" style="margin-left:auto">Сохранить результат в журнал</button>
+      </div>
+      <div class="hintline" id="hintLine" style="display:none">💡 ${problem.hint||''}</div>
+    </div>`;
+  buildInput(problem.input);
+  document.getElementById('checkBtn').onclick=doCheck;
+  document.getElementById('nextBtn').onclick=()=>{answered=false;selected=null;problem=GEN[t.gen]();renderCheck(t);};
+  document.getElementById('hintBtn').onclick=()=>document.getElementById('hintLine').style.display='block';
+  document.getElementById('saveBtn').onclick=()=>{saveState();const synced=syncSession(t.id);toast(synced?'Результат отправлен в журнал':'Сохранено локально (журнал не подключён)');};
+}
+function buildInput(inp){
+  const area=document.getElementById('inputArea');
+  if(inp.type==='fraction'){area.innerHTML=`<div class="answer-row"><div class="fr-input"><input id="inN" inputmode="numeric"><span class="bar"></span><input id="inD" inputmode="numeric"><span class="field-label">дробь</span></div></div>`;enterCheck(['inN','inD']);setTimeout(()=>document.getElementById('inN').focus(),30);}
+  else if(inp.type==='mixed'){area.innerHTML=`<div class="answer-row"><div class="whole-input" style="display:flex;flex-direction:column;align-items:center"><input id="inW" inputmode="numeric"><span class="field-label">целое</span></div><div class="fr-input"><input id="inN" inputmode="numeric"><span class="bar"></span><input id="inD" inputmode="numeric"><span class="field-label">дробь</span></div></div>`;enterCheck(['inW','inN','inD']);setTimeout(()=>document.getElementById('inW').focus(),30);}
+  else if(inp.type==='single'){area.innerHTML=`<div class="answer-row"><div class="whole-input" style="display:flex;flex-direction:column;align-items:center"><input id="inS" inputmode="numeric" style="width:120px"><span class="field-label">${inp.label||'ответ'}</span></div></div>`;enterCheck(['inS']);setTimeout(()=>document.getElementById('inS').focus(),30);}
+  else if(inp.type==='choice'){area.innerHTML=`<div class="choices" id="choices">${inp.options.map(o=>`<button class="choice" data-v="${o}">${o}</button>`).join('')}</div>`;area.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{if(answered)return;area.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selected=b.dataset.v;});}
+  else if(inp.type==='numberline'){setTimeout(()=>{const host=document.getElementById('nlpick');if(!host)return;host.querySelectorAll('.tick-hit').forEach(g=>{const act=()=>{if(answered)return;host.querySelectorAll('.tick-hit circle:last-child').forEach(c=>c.setAttribute('opacity','0'));g.querySelector('circle:last-child').setAttribute('opacity','1');selected=g.dataset.i;};g.addEventListener('click',act);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});});},30);}
+}
+function enterCheck(ids){ids.forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('keydown',ev=>{if(ev.key==='Enter')doCheck();});});}
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+function readAnswer(inp){if(inp.type==='fraction')return{n:val('inN'),d:val('inD')};if(inp.type==='mixed')return{w:val('inW'),n:val('inN'),d:val('inD')};if(inp.type==='single')return val('inS');return selected;}
+function doCheck(){
+  if(answered)return;const inp=problem.input,ans=readAnswer(inp);
+  const empty=(inp.type==='fraction'&&(!ans.n||!ans.d))||(inp.type==='mixed'&&(!ans.w||!ans.n||!ans.d))||(inp.type==='single'&&!ans)||((inp.type==='choice'||inp.type==='numberline')&&!ans);
+  if(empty){const fb=document.getElementById('fb');fb.className='feedback err show';fb.innerHTML=`<div class="head">Введи ответ</div>`;return;}
+  const res=problem.check(ans);answered=true;const p=progress[current];p.attempts++;
+  const fb=document.getElementById('fb');
+  if(res.ok){p.correct++;streak++;fb.className='feedback ok show';fb.innerHTML=`<div class="head">✓ Верно</div><div class="why">${choice(['Чисто.','Так держать.','Точно в цель.','Отлично.','Уверенно.'])}</div>`;}
+  else{streak=0;fb.className='feedback err show';fb.innerHTML=`<div class="head">Не совсем</div><div class="why">Правильный ответ: ${res.correctText}.<br>${problem.wrongWhy?problem.wrongWhy(ans):''}</div>`;}
+  if(inp.type==='choice')document.querySelectorAll('#choices .choice').forEach(b=>{b.disabled=true;const cv=problem.input.options.find(o=>problem.check(o).ok);if(b.dataset.v===cv)b.classList.add('correct');else if(b.dataset.v===selected)b.classList.add('wrong');});
+  ['inN','inD','inW','inS'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=true;});
+  document.getElementById('checkBtn').style.display='none';
+  const nb=document.getElementById('nextBtn');nb.style.display='inline-block';nb.focus();
+  document.querySelector('.q-counter').textContent=`Решено ${p.correct} из ${p.attempts}`;
+  document.querySelector('.streak').innerHTML=`серия <b>${streak}</b>🔥`;
+  saveState();renderNav();
+}
+
+/* --------- генерация набора заданий --------- */
+function renderGen(t){
+  const body=document.getElementById('tabBody');
+  body.innerHTML=`
+    <div class="card no-print">
+      <div class="prompt" style="margin-top:0">Сгенерировать набор заданий по теме «${t.title}»</div>
+      <p class="blurb" style="margin:6px 0 14px">Создаёт готовый лист со свежими заданиями и ответами — можно распечатать или раздать.</p>
+      <div class="set-block"><label>Сколько заданий</label>
+        <div class="choices" id="cnt">${[6,10,15,20].map((n,i)=>`<button class="choice ${i===1?'sel':''}" data-n="${n}">${n}</button>`).join('')}</div></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="genBtn">Сгенерировать</button>
+        <button class="btn btn-ghost" id="ansBtn" style="display:none">Показать/скрыть ответы</button>
+        <button class="btn btn-ghost" id="prnBtn" style="display:none">Печать / PDF</button>
+      </div>
+    </div>
+    <div id="wsOut"></div>`;
+  let count=10;
+  body.querySelectorAll('#cnt .choice').forEach(b=>b.onclick=()=>{body.querySelectorAll('#cnt .choice').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');count=+b.dataset.n;});
+  document.getElementById('genBtn').onclick=()=>{
+    let items='';for(let i=0;i<count;i++){const pr=GEN[t.gen]();const q=pr.promptHTML.replace(/Какая часть полоски закрашена\? Запиши дробью\.|Какое число отмечено стрелкой\?|Нажми на точку.*?на прямой\./,'Определи дробь:');
+      items+=`<div class="ws-item"><span class="qn">${i+1}.</span><div class="ws-q">${pr.promptHTML}${pr.visualHTML?`<div style="margin:8px 0">${pr.visualHTML}</div>`:''}<div class="ws-ans">Ответ: ${pr.ans}</div></div></div>`;}
+    document.getElementById('wsOut').innerHTML=`<div class="card" id="wsCard"><div class="eyebrow">RBF Tutor · ${t.title}</div><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin-bottom:4px">Набор заданий</div><div class="hintline no-print">Имя: __________________   Дата: __________</div><div class="ws-list">${items}</div></div>`;
+    document.getElementById('ansBtn').style.display='inline-block';document.getElementById('prnBtn').style.display='inline-block';
+    document.getElementById('ansBtn').onclick=()=>document.getElementById('wsCard').classList.toggle('show-ans');
+    document.getElementById('prnBtn').onclick=()=>window.print();
+  };
+}
+
+/* ===================== СТАРТ ===================== */
+renderNav();renderHome();
+</script>
+</body>
+</html>
