@@ -463,7 +463,7 @@ function renderNav(){
   const add=(html,cls,on)=>{const b=document.createElement('button');b.innerHTML=html;b.className=cls;b.onclick=on;navEl.appendChild(b);};
   add(`<span class="idx">★</span><span class="lbl">Обзор и результаты</span>`,current===null&&tab!=='settings'?'active':'',()=>{current=null;tab='home';renderNav();renderHome();});
   const sec=document.createElement('div');sec.className='sec';sec.textContent='Проверка знаний';navEl.appendChild(sec);
-  TOPICS.forEach(t=>{const p=progress[t.id];const done=p.attempts?`<span class="done">${p.correct}/${p.attempts}</span>`:'';
+  TOPICS.forEach(t=>{const p=progress[t.id];const done=p.attempts?`<span class="done">✓</span>`:'';
     add(`<span class="idx">${t.num}</span><span class="lbl">${t.title}</span>${done}`,current===t.id?'active':'',()=>openTopic(t.id));});
   const sec2=document.createElement('div');sec2.className='sec';sec2.textContent='Для репетитора';navEl.appendChild(sec2);
   add(`<span class="idx">⚙</span><span class="lbl">Настройки и журнал</span>`,tab==='settings'?'active':'',()=>{current=null;tab='settings';renderNav();renderSettings();});
@@ -473,29 +473,24 @@ function renderNav(){
 
 /* ===================== ОБЗОР ===================== */
 function renderHome(){
-  const tc=Object.values(progress).reduce((s,p)=>s+p.correct,0),ta=Object.values(progress).reduce((s,p)=>s+p.attempts,0);
-  const acc=ta?Math.round(100*tc/ta):0,started=Object.values(progress).filter(p=>p.attempts>0).length;
-  const rows=TOPICS.map(t=>{const p=progress[t.id],a=p.attempts?Math.round(100*p.correct/p.attempts):0;
-    return `<tr class="${p.attempts?'':'untouched'}"><td class="num-cell">${t.num}</td><td>${t.title}</td><td class="center">${p.correct}</td><td class="center">${p.attempts}</td><td class="center"><div style="display:flex;align-items:center;gap:8px;justify-content:center"><span class="bar-mini"><span style="width:${a}%"></span></span><span class="acc">${p.attempts?a+'%':'—'}</span></div></td></tr>`;}).join('');
+  const started=Object.values(progress).filter(p=>p.attempts>0).length;
+  const rows=TOPICS.map(t=>{const p=progress[t.id];
+    const status = p.attempts ? '<span style="color:#2E7D5B;font-weight:600;">✓ Пройдено</span>' : '<span style="color:#7a8c8e;">—</span>';
+    return `<tr class="${p.attempts?'':'untouched'}"><td class="num-cell">${t.num}</td><td>${t.title}</td><td>${status}</td></tr>`;}).join('');
   document.getElementById('main').innerHTML=`
     <div class="eyebrow">RBF Tutor · раздел «Дроби»</div>
     <h1 class="topic">Дроби: урок и проверка<br>в одиннадцати темах</h1>
-    <p class="blurb">Каждая тема — это короткий урок с моделями и проверка знаний с бесконечной генерацией заданий. Результаты сохраняются и могут отправляться в твой журнал Google Sheets.</p>
+    <p class="blurb">Каждая тема — это короткий урок с моделями и проверка знаний с бесконечной генерацией заданий. Результаты отправляются в журнал репетитора Google Sheets.</p>
     <div class="name-row"><label for="stName">Ученик:</label><input id="stName" placeholder="Имя ученика" value="${(studentName||'').replace(/"/g,'&quot;')}"></div>
-    <div class="stat-grid">
-      <div class="stat"><div class="num">${tc}</div><div class="lab">верных ответов</div></div>
-      <div class="stat"><div class="num">${acc}%</div><div class="lab">общая точность</div></div>
-      <div class="stat"><div class="num">${started}/${TOPICS.length}</div><div class="lab">тем начато</div></div>
+    <div class="stat-grid" style="grid-template-columns:1fr; max-width:300px;">
+      <div class="stat"><div class="num">${started}/${TOPICS.length}</div><div class="lab">тем пройдено</div></div>
     </div>
     <div class="card" style="margin-top:24px">
       <div class="prompt" style="margin-top:0">Результаты по темам</div>
-      <table class="rtable"><thead><tr><th>№</th><th>Тема</th><th class="center">Верно</th><th class="center">Попыток</th><th class="center">Точность</th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="rtable"><thead><tr><th>№</th><th>Тема</th><th>Статус</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="actions" style="margin-top:16px">
-        <button class="btn btn-primary" id="copyS">Скопировать для Google Sheets</button>
-        <button class="btn btn-ghost" id="dlC">Скачать CSV</button>
-        <button class="btn btn-ghost" id="rst">Сбросить</button>
+        <button class="btn btn-ghost" id="rst">Сбросить прогресс</button>
       </div>
-      <div class="hintline">«Скопировать» → открой таблицу → A1 → Ctrl+V. Для автоматического журнала настрой подключение в разделе «Настройки и журнал».</div>
     </div>
     <div class="card" style="margin-top:20px">
       <div class="prompt" style="margin-top:0">С чего начать?</div>
@@ -503,7 +498,6 @@ function renderHome(){
       <div class="actions" style="margin-top:0"><button class="btn btn-primary" id="g1">Открыть тему 01 →</button></div>
     </div>`;
   const nm=document.getElementById('stName');nm.addEventListener('change',()=>{studentName=nm.value.trim();saveState();renderNav();});
-  document.getElementById('copyS').onclick=copyForSheets;document.getElementById('dlC').onclick=exportCSV;
   document.getElementById('rst').onclick=()=>{if(confirm('Сбросить все результаты?')){TOPICS.forEach(t=>progress[t.id]={correct:0,attempts:0});streak=0;saveState();renderNav();renderHome();toast('Сброшено');}};
   document.getElementById('g1').onclick=()=>openTopic('basics');
 }
@@ -590,18 +584,17 @@ function renderCheck(t){
   
   let qText = '';
   if (isDone) {
-    qText = `Результат: ${sessionCorrect} из 10`;
+    qText = `Результат сохранён`;
   } else {
-    qText = `Задание ${sessionAttempts + (answered ? 0 : 1)} из 10`;
+    qText = `Задание ${sessionAttempts + 1} из 10`;
   }
 
   let feedbackHTML = '';
   if (isDone) {
-    const accuracy = Math.round(100 * sessionCorrect / 10);
     feedbackHTML = `
       <div class="feedback ok show" style="display:block;">
         <div class="head">Проверка завершена!</div>
-        <div class="why">Ваш результат: ${sessionCorrect} из 10 (${accuracy}%).<br>
+        <div class="why">Вы ответили на все 10 вопросов темы.<br>
         <span style="font-weight:bold;color:${sessionSynced?'#2E7D5B':'#B4503E'}">
           ${sessionSynced ? '✓ Результаты успешно записаны в журнал репетитора.' : '⚠ Не удалось отправить в журнал (сохранено локально).'}
         </span>
@@ -611,7 +604,7 @@ function renderCheck(t){
 
   document.getElementById('tabBody').innerHTML=`
     <div class="card">
-      <div class="card-head"><span class="q-counter">${qText}</span><span class="streak">серия <b>${streak}</b>🔥</span></div>
+      <div class="card-head"><span class="q-counter">${qText}</span></div>
       
       ${isDone ? '' : `
         <div class="prompt">${problem.promptHTML}</div>
@@ -619,36 +612,23 @@ function renderCheck(t){
         <div id="inputArea"></div>
       `}
       
-      <div class="feedback ${isDone ? '' : 'show'}" id="fb">${feedbackHTML}</div>
+      <div class="feedback ${isDone ? '' : 'show'}" id="fb" style="display:${isDone ? 'block' : 'none'}">${feedbackHTML}</div>
       
       <div class="actions">
         ${isDone ? `
           <button class="btn btn-primary" id="resetBtn">Начать заново ↻</button>
           <button class="btn btn-ghost btn-sm" id="saveBtn" style="margin-left:auto;">Отправить в журнал ещё раз</button>
         ` : `
-          <button class="btn btn-primary" id="actionBtn">${answered ? 'Следующее →' : 'Проверить'}</button>
-          <button class="btn btn-ghost" id="hintBtn" style="display:${answered ? 'none' : 'inline-block'}">Подсказка</button>
+          <button class="btn btn-primary" id="actionBtn">${sessionAttempts === 9 ? 'Завершить тест' : 'Следующее →'}</button>
         `}
       </div>
-      
-      ${isDone ? '' : `<div class="hintline" id="hintLine" style="display:none">💡 ${problem.hint||''}</div>`}
     </div>`;
 
   if (!isDone) {
     buildInput(problem.input);
     const btn = document.getElementById('actionBtn');
-    if (answered) {
-      btn.onclick = () => {
-        answered = false;
-        selected = null;
-        problem = GEN[t.gen]();
-        renderCheck(t);
-      };
-      btn.focus();
-    } else {
-      btn.onclick = doCheck;
-    }
-    document.getElementById('hintBtn').onclick = () => document.getElementById('hintLine').style.display = 'block';
+    btn.onclick = doCheck;
+    btn.focus();
   } else {
     document.getElementById('resetBtn').onclick = () => {
       sessionCorrect = 0;
@@ -679,18 +659,20 @@ function enterCheck(ids){ids.forEach(id=>{const e=document.getElementById(id);if
 const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
 function readAnswer(inp){if(inp.type==='fraction')return{n:val('inN'),d:val('inD')};if(inp.type==='mixed')return{w:val('inW'),n:val('inN'),d:val('inD')};if(inp.type==='single')return val('inS');return selected;}
 function doCheck(){
-  if(answered)return;const inp=problem.input,ans=readAnswer(inp);
+  if(sessionAttempts === 10) return;
+  const inp=problem.input,ans=readAnswer(inp);
   const empty=(inp.type==='fraction'&&(!ans.n||!ans.d))||(inp.type==='mixed'&&(!ans.w||!ans.n||!ans.d))||(inp.type==='single'&&!ans)||((inp.type==='choice'||inp.type==='numberline')&&!ans);
-  if(empty){const fb=document.getElementById('fb');fb.className='feedback err show';fb.innerHTML=`<div class="head">Введи ответ</div>`;return;}
-  const res=problem.check(ans);answered=true;
-  sessionAttempts++;
-  const fb=document.getElementById('fb');
-  if(res.ok){sessionCorrect++;streak++;fb.className='feedback ok show';fb.innerHTML=`<div class="head">✓ Верно</div><div class="why">${choice(['Чисто.','Так держать.','Точно в цель.','Отлично.','Уверенно.'])}</div>`;}
-  else{streak=0;fb.className='feedback err show';fb.innerHTML=`<div class="head">Не совсем</div><div class="why">Правильный ответ: ${res.correctText}.<br>${problem.wrongWhy?problem.wrongWhy(ans):''}</div>`;}
-  if(inp.type==='choice')document.querySelectorAll('#choices .choice').forEach(b=>{b.disabled=true;const cv=problem.input.options.find(o=>problem.check(o).ok);if(b.dataset.v===cv)b.classList.add('correct');else if(b.dataset.v===selected)b.classList.add('wrong');});
-  ['inN','inD','inW','inS'].forEach(id=>{const e=document.getElementById(id);if(e)e.disabled=true;});
+  if(empty){
+    const fb=document.getElementById('fb');
+    fb.style.display = 'block';
+    fb.className='feedback err show';
+    fb.innerHTML=`<div class="head">Введи ответ</div>`;
+    return;
+  }
   
-  document.querySelector('.streak').innerHTML=`серия <b>${streak}</b>🔥`;
+  const res=problem.check(ans);
+  sessionAttempts++;
+  if(res.ok){sessionCorrect++;}
   
   if (sessionAttempts === 10) {
     const p=progress[current];
@@ -702,26 +684,13 @@ function doCheck(){
     // Automatically submit to Google Sheets
     sessionSynced = syncSession(current);
     
-    const btn = document.getElementById('actionBtn');
-    btn.textContent = 'Посмотреть результаты';
-    btn.onclick = () => {
-      renderCheck(TOPICS.find(x=>x.id===current));
-    };
-    btn.focus();
+    renderCheck(TOPICS.find(x=>x.id===current));
   } else {
-    const btn = document.getElementById('actionBtn');
-    btn.textContent = 'Следующее →';
-    btn.onclick = () => {
-      answered = false;
-      selected = null;
-      problem = GEN[TOPICS.find(x=>x.id===current).gen]();
-      renderCheck(TOPICS.find(x=>x.id===current));
-    };
-    btn.focus();
+    answered = false;
+    selected = null;
+    problem = GEN[TOPICS.find(x=>x.id===current).gen]();
+    renderCheck(TOPICS.find(x=>x.id===current));
   }
-  
-  const hintBtn = document.getElementById('hintBtn');
-  if (hintBtn) hintBtn.style.display = 'none';
 }
 
 /* --------- генерация набора заданий --------- */
